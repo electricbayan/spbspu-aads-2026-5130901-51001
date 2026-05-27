@@ -32,7 +32,7 @@ namespace volkovich
     };
 
     T pop() {
-      if (isEmpty) {
+      if (isEmpty()) {
         throw std::logic_error("Queue is empty");
       }
       return data.popFront();

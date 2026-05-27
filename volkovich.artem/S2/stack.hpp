@@ -21,9 +21,15 @@ namespace volkovich
       data.pushFront(v);
     };
     void pop() {
+      if (isEmpty()) {
+        throw std::logic_error("Stack is empty");
+      }
       data.popFront();
     };
     T pop() {
+      if (isEmpty()) {
+        throw std::logic_error("Stack is empty");
+      }
       T d = std::move(data.head->data);
       data.popFront();
       return d;
