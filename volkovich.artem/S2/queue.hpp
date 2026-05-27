@@ -3,31 +3,25 @@
 
 #include "../common/list.hpp"
 
-namespace volkovich
-{
-  template <typename T>
-  class Queue
-  {
-    List<T> data;
+namespace volkovich {
+  template < typename T >
+  class Queue {
+    List< T > data;
 
-  public:
-    bool isEmpty() const noexcept
-    {
+   public:
+    bool isEmpty() const noexcept {
       return data.isEmpty();
     };
 
-    size_t length() const noexcept
-    {
+    size_t length() const noexcept {
       return data.size();
     };
 
-    void push(T &&v)
-    {
+    void push(T&& v) {
       data.pushFront(std::move(v));
     };
 
-    void push(const T &v)
-    {
+    void push(const T& v) {
       data.pushFront(v);
     };
 

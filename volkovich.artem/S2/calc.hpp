@@ -1,10 +1,12 @@
+#ifndef CALC_HPP
+#define CALC_HPP
+#include <iostream>
+#include <string>
+
 #include "queue.hpp"
 #include "stack.hpp"
-#include <string>
-#include <iostream>
 
 typedef long long ll;
-
 
 namespace volkovich {
 
@@ -12,10 +14,9 @@ namespace volkovich {
     if (s == "^") {
       return 2;
     }
-    if (s == "*" || s == "/") {
+    if (s == "*" || s == "/" || s == "%") {
       return 1;
-    }
-    else {
+    } else {
       return 0;
     }
   }
@@ -29,31 +30,29 @@ namespace volkovich {
     }
   }
 
-  Queue<std::string> createInfix(const std::string& input) {
-    Queue<std::string> infix;
+  Queue< std::string > createInfix(const std::string& input) {
+    Queue< std::string > infix;
     size_t start = 0;
-    for (size_t i = 0; i<= input.size() ; i++) {
+    for (size_t i = 0; i <= input.size(); i++) {
       if (i == input.size() || input[i] == ' ') {
         infix.push(input.substr(start, i - start));
-        start=i+1;
+        start = i + 1;
       }
     }
     return infix;
   }
-  Queue<std::string> createPostfix(const std::string& input) {
-    Queue<std::string> infix = createInfix(input);
+  Queue< std::string > createPostfix(const std::string& input) {
+    Queue< std::string > infix = createInfix(input);
 
-    Queue<std::string> out;
-    Stack<std::string> operators;
+    Queue< std::string > out;
+    Stack< std::string > operators;
     while (!infix.isEmpty()) {
       std::string token = infix.pop();
       if (isNumber(token)) {
         out.push(token);
-      }
-      else if (token == "(") {
+      } else if (token == "(") {
         operators.push(token);
-      }
-      else if (token == ")") {
+      } else if (token == ")") {
         while (!operators.isEmpty() && operators.value() != "(") {
           out.push(operators.value());
           operators.pop();
@@ -61,9 +60,9 @@ namespace volkovich {
         if (!operators.isEmpty()) {
           operators.pop();
         }
-      }
-      else {
-        while (!operators.isEmpty() && operators.value() != "(" && getPriority(operators.value()) != getPriority(token)) {
+      } else {
+        while (!operators.isEmpty() && operators.value() != "(" &&
+               getPriority(operators.value()) != getPriority(token)) {
           out.push(operators.value());
           operators.pop();
         }
@@ -77,6 +76,9 @@ namespace volkovich {
     return out;
   }
   ll calculate(const std::string& input) {
-    Queue<std::string> postfix_queue = createPostfix(input);
+    Queue< std::string > postfix_queue = createPostfix(input);
+    Stack< long long > vals;
   };
 }
+
+#endif
