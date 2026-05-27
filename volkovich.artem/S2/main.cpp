@@ -2,6 +2,7 @@
 #include <fstream>
 #include <string>
 #include "calc.hpp"
+#include "stack.hpp"
 
 int main(int argc, char* argv[]) {
   if (argc > 2)  {
@@ -17,9 +18,11 @@ int main(int argc, char* argv[]) {
   }
 
   std::string eval;
+  volkovich::Stack<long long> evals;
   while (std::getline(*input, eval)) {
     if (!eval.empty()){
       long long res = volkovich::calculate(eval);
+      evals.push(res);
     }
   }
 }
