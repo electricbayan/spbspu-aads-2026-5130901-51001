@@ -31,11 +31,11 @@ namespace volkovich
       data.pushFront(v);
     };
 
-    void pop() {
+    T pop() {
       if (isEmpty) {
         throw std::logic_error("Queue is empty");
       }
-      data.popFront();
+      return data.popFront();
     };
 
     void swap(Queue& other) {

@@ -17,8 +17,12 @@ BOOST_AUTO_TEST_CASE(queue_push)  {
   BOOST_TEST(q.length() == 3);
 }
 
-// BOOST_AUTO_TEST_CASE(queue_pop) {
-
-// }
+BOOST_AUTO_TEST_CASE(queue_pop) {
+  volkovich::Queue<int> q;
+  q.push(1);
+  q.push(2);
+  q.push(3);
+  int popped = q.pop();
+}
 
 // BOOST_AUTO_TEST_CASE()
