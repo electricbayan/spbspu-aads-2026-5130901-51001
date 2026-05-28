@@ -1,5 +1,5 @@
-#define BOOST_TEST_MODULE S2
-#include <boost/test/included/unit_test.hpp>
+
+#include <boost/test/unit_test.hpp>
 
 #include "queue.hpp"
 
@@ -23,6 +23,7 @@ BOOST_AUTO_TEST_CASE(queue_pop) {
   q.push(2);
   q.push(3);
   int popped = q.pop();
+
 }
 
 // BOOST_AUTO_TEST_CASE()
