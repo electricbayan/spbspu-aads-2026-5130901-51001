@@ -12,9 +12,12 @@ namespace volkovich {
 
   size_t getPriority(const std::string& s) {
     if (s == "^") {
-      return 2;
+      return 3;
     }
     if (s == "*" || s == "/" || s == "%") {
+      return 2;
+    }
+    if (s == "+" || s == "-") {
       return 1;
     } else {
       return 0;
@@ -22,12 +25,19 @@ namespace volkovich {
   }
 
   bool isNumber(const std::string& s) {
-    try {
-      std::stoll(s);
-      return true;
-    } catch (...) {
-      return false;
+    size_t i=0;
+    if (s[i] == '-') {
+      if (s.size() == 1) {
+        return false;
+      }
+      i++;
     }
+    for (;i<s.size();i++) {
+      if (!std::isdigit(static_cast<unsigned char>(s[i]))) {
+        return false;
+      }
+    }
+    return true;
   }
 
   Queue< std::string > createInfix(const std::string& input) {
@@ -48,6 +58,9 @@ namespace volkovich {
     Stack< std::string > operators;
     while (!infix.isEmpty()) {
       std::string token = infix.pop();
+      if (token.empty()) {
+        continue;
+      }
       if (isNumber(token)) {
         out.push(token);
       } else if (token == "(") {
@@ -60,9 +73,10 @@ namespace volkovich {
         if (!operators.isEmpty()) {
           operators.pop();
         }
-      } else {
+      } else if (token == "+" || token == "-" || token == "*" || token == "/" || token == "^" || token == "%"){
         while (!operators.isEmpty() && operators.value() != "(" &&
-               getPriority(operators.value()) != getPriority(token)) {
+               ((token == "^" && getPriority(operators.value()) > getPriority(token)) ||
+                (token != "^" && getPriority(operators.value()) >= getPriority(token)))) {
           out.push(operators.value());
           operators.pop();
         }
@@ -70,14 +84,22 @@ namespace volkovich {
       }
     }
     while (!operators.isEmpty()) {
-      out.push(operators.value());
+        out.push(operators.value());
+
       operators.pop();
     }
     return out;
   }
   ll calculate(const std::string& input) {
     Queue< std::string > postfix_queue = createPostfix(input);
-    Stack< long long > vals;
+    ll res{};
+    size_t len = postfix_queue.length();
+    for (size_t i =0;i<len;i++) {
+      std::cout<<postfix_queue.pop();
+    }
+
+    std::cout<<'\n';
+    return res;
   };
 }
 

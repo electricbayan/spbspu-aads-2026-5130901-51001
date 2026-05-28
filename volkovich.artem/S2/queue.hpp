@@ -13,16 +13,16 @@ namespace volkovich {
       return data.isEmpty();
     };
 
-    size_t length() const noexcept {
+    size_t length() noexcept {
       return data.size();
     };
 
     void push(T&& v) {
-      data.pushFront(std::move(v));
+      data.pushBack(std::move(v));
     };
 
     void push(const T& v) {
-      data.pushFront(v);
+      data.pushBack(v);
     };
 
     T pop() {

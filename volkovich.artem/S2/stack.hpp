@@ -1,3 +1,6 @@
+#ifndef STACK_HPP
+#define STACK_HPP
+
 #include "../common/list.hpp"
 
 namespace volkovich {
@@ -18,12 +21,6 @@ namespace volkovich {
     void push(const T& v) {
       data.pushFront(v);
     };
-    void pop() {
-      if (isEmpty()) {
-        throw std::logic_error("Stack is empty");
-      }
-      data.popFront();
-    };
     T pop() {
       if (isEmpty()) {
         throw std::logic_error("Stack is empty");
@@ -33,12 +30,14 @@ namespace volkovich {
       return d;
     }
 
-    T& value() {
-      return data.head();
+    T value() {
+      return data.head->data;
     }
 
     void swap(Stack& other) {
-      data.swap(other.data)
+      data.swap(other.data);
     }
   };
 }
+
+#endif

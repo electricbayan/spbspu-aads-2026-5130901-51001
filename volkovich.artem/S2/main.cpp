@@ -10,8 +10,8 @@ int main(int argc, char* argv[]) {
     return 2;
   }
   std::istream* input = &std::cin;
+  std::ifstream file;
   if (argc == 2) {
-    std::ifstream file;
     file.open(argv[1]);
     if (!file) { std::cerr<<"Cannot open file"; return 2;}
     input = &file;
