@@ -2,11 +2,14 @@
 #define CALC_HPP
 #include <iostream>
 #include <string>
+#include <limits>
 
 #include "queue.hpp"
 #include "stack.hpp"
 
 typedef long long ll;
+constexpr ll min = std::numeric_limits<ll>::min();
+constexpr ll max = std::numeric_limits<ll>::max();
 
 namespace volkovich {
 
@@ -25,15 +28,15 @@ namespace volkovich {
   }
 
   bool isNumber(const std::string& s) {
-    size_t i=0;
+    size_t i = 0;
     if (s[i] == '-') {
       if (s.size() == 1) {
         return false;
       }
       i++;
     }
-    for (;i<s.size();i++) {
-      if (!std::isdigit(static_cast<unsigned char>(s[i]))) {
+    for (; i < s.size(); i++) {
+      if (!std::isdigit(static_cast< unsigned char >(s[i]))) {
         return false;
       }
     }
@@ -73,10 +76,11 @@ namespace volkovich {
         if (!operators.isEmpty()) {
           operators.pop();
         }
-      } else if (token == "+" || token == "-" || token == "*" || token == "/" || token == "^" || token == "%"){
+      } else if (token == "+" || token == "-" || token == "*" || token == "/" || token == "^" ||
+                 token == "%") {
         while (!operators.isEmpty() && operators.value() != "(" &&
                ((token == "^" && getPriority(operators.value()) > getPriority(token)) ||
-                (token != "^" && getPriority(operators.value()) >= getPriority(token)))) {
+                   (token != "^" && getPriority(operators.value()) >= getPriority(token)))) {
           out.push(operators.value());
           operators.pop();
         }
@@ -84,22 +88,32 @@ namespace volkovich {
       }
     }
     while (!operators.isEmpty()) {
-        out.push(operators.value());
+      out.push(operators.value());
 
       operators.pop();
     }
     return out;
   }
+
+  ll calculatePostfix(Queue< std::string > postfix) {
+    Stack< ll > numbers;
+    while (!postfix.isEmpty()) {
+      std::string token = postfix.pop();
+      if (isNumber(token)) {
+        numbers.push(std::stoll(token));
+      } else {
+        ll rhs = numbers.pop();
+        ll lhs = numbers.pop();
+        if (token == "+") {
+
+        }
+      }
+    }
+    return numbers.pop();
+  }
   ll calculate(const std::string& input) {
     Queue< std::string > postfix_queue = createPostfix(input);
-    ll res{};
-    size_t len = postfix_queue.length();
-    for (size_t i =0;i<len;i++) {
-      std::cout<<postfix_queue.pop();
-    }
-
-    std::cout<<'\n';
-    return res;
+    return calculatePostfix(postfix_queue);
   };
 }
 
