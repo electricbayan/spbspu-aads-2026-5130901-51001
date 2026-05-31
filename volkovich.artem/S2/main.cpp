@@ -19,11 +19,27 @@ int main(int argc, char* argv[]) {
 
   std::string eval;
   volkovich::Stack<long long> evals;
+  long long res;
   while (std::getline(*input, eval)) {
     if (!eval.empty()){
-      long long res = volkovich::calculate(eval);
+      try {
+        res = volkovich::calculate(eval);
+      } catch (const std::exception& e) {
+        std::cerr << e.what()<<'\n';
+        return 2;
+      }
       evals.push(res);
     }
   }
-
+  bool first = true;
+  while(!evals.isEmpty()) {
+    if (!first) {
+      std::cout<<' ';
+    } else {
+      first = false;
+    }
+    std::cout<<evals.pop();
+  }
+  std::cout<<'\n';
+  return 0;
 }
