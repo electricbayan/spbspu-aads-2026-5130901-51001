@@ -24,6 +24,13 @@ namespace volkovich {
     }
   }
 
+  ll mod(ll v) {
+    if (v > 0) {
+      return v;
+    }
+    return static_cast<ll>(-(v+1))+1;
+  }
+
   bool isNumber(const std::string& s) {
     size_t i = 0;
     if (s[i] == '-') {
@@ -140,7 +147,13 @@ namespace volkovich {
           if (lhs == min && rhs == -1) {
             throw std::overflow_error("Out of range numbers");
           }
-          numbers.push(lhs % rhs);
+          ll res = lhs % rhs;
+          if (res > 0) {
+            numbers.push(res);
+          } else {
+            numbers.push(mod(rhs) - mod(res));
+          }
+
         }
       }
     }
