@@ -107,7 +107,7 @@ namespace volkovich {
           }
           numbers.push(lhs + rhs);
         } else if (token == "-") {
-          if (rhs > 0 && lhs < min + rhs || rhs < 0 && lhs > max + rhs) {
+          if ((rhs > 0 && lhs < min + rhs )|| (rhs < 0 && lhs > max + rhs)) {
             throw std::overflow_error("Out of range numbers");
           }
           numbers.push(lhs - rhs);

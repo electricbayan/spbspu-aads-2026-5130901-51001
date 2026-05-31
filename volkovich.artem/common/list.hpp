@@ -5,6 +5,7 @@
 #include "iter.hpp"
 #include "item.hpp"
 #include <cstddef>
+#include <stdexcept>
 
 namespace volkovich
 {
