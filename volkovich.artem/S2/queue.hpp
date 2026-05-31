@@ -35,7 +35,6 @@ namespace volkovich {
     void swap(Queue& other) {
       data.swap(other.data);
     }
-    T drop();
   };
 }
 #endif

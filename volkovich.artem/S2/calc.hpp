@@ -1,22 +1,19 @@
 #ifndef CALC_HPP
 #define CALC_HPP
 #include <iostream>
-#include <string>
 #include <limits>
+#include <string>
 
 #include "queue.hpp"
 #include "stack.hpp"
 
 typedef long long ll;
-constexpr ll min = std::numeric_limits<ll>::min();
-constexpr ll max = std::numeric_limits<ll>::max();
+constexpr ll min = std::numeric_limits< ll >::min();
+constexpr ll max = std::numeric_limits< ll >::max();
 
 namespace volkovich {
 
   size_t getPriority(const std::string& s) {
-    if (s == "^") {
-      return 3;
-    }
     if (s == "*" || s == "/" || s == "%") {
       return 2;
     }
@@ -105,7 +102,45 @@ namespace volkovich {
         ll rhs = numbers.pop();
         ll lhs = numbers.pop();
         if (token == "+") {
-
+          if (rhs > 0 && lhs > max - rhs || rhs < 0 && lhs < min - rhs) {
+            throw std::overflow_error("Out of range numbers");
+          }
+          return lhs + rhs;
+        } else if (token == "-") {
+          if (rhs > 0 && lhs < min + rhs || rhs < 0 && lhs > max + rhs) {
+            throw std::overflow_error("Out of range numbers");
+          }
+          return lhs - rhs;
+        } else if (token == "/") {
+          if (rhs == 0) {
+            throw std::logic_error("Division by zero");
+          }
+          if (lhs == -1 && rhs == min || rhs == -1 && lhs == min) {
+            throw std::overflow_error("Out of range numbers");
+          }
+          return lhs / rhs;
+        } else if (token == "*") {
+          if (lhs == -1 && rhs == min || rhs == -1 && lhs == min) {
+            throw std::overflow_error("Out of range numbers");
+          }
+          if (lhs > 0) {
+            if (rhs > 0 && lhs > max / rhs || rhs < 0 && rhs < min / lhs) {
+              throw std::overflow_error("Out of range numbers");
+            }
+          } else {
+            if (rhs > 0 && lhs < min / rhs || rhs < 0 && lhs < max / rhs) {
+              throw std::overflow_error("Out of range numbers");
+            }
+          }
+          return lhs * rhs;
+        } else if (token == "%") {
+          if (rhs == 0) {
+            throw std::logic_error("Division by zero");
+          }
+          if (lhs == -1 && rhs == min || rhs == -1 && lhs == min) {
+            throw std::overflow_error("Out of range numbers");
+          }
+          return lhs % rhs;
         }
       }
     }
