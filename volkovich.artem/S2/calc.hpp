@@ -102,7 +102,7 @@ namespace volkovich {
         ll rhs = numbers.pop();
         ll lhs = numbers.pop();
         if (token == "+") {
-          if (rhs > 0 && lhs > max - rhs || rhs < 0 && lhs < min - rhs) {
+          if ((rhs > 0 && lhs > max - rhs) || (rhs < 0 && lhs < min - rhs)) {
             throw std::overflow_error("Out of range numbers");
           }
           numbers.push(lhs + rhs);
@@ -124,11 +124,11 @@ namespace volkovich {
             throw std::overflow_error("Out of range numbers");
           }
           if (lhs > 0) {
-            if (rhs > 0 && lhs > max / rhs || rhs < 0 && rhs < min / lhs) {
+            if ((rhs > 0 && lhs > max / rhs) || (rhs < 0 && rhs < min / lhs)) {
               throw std::overflow_error("Out of range numbers");
             }
           } else {
-            if (rhs > 0 && lhs < min / rhs || rhs < 0 && lhs < max / rhs) {
+            if ((rhs > 0 && lhs < min / rhs) || (rhs < 0 && lhs < max / rhs)) {
               throw std::overflow_error("Out of range numbers");
             }
           }

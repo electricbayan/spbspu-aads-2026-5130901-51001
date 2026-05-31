@@ -13,11 +13,11 @@ namespace volkovich
   {
   private:
     Item<T> fake_node;
-    Item<T> *tail = nullptr;
-    Item<T> *head = nullptr;
     size_t list_len = 0;
 
   public:
+    Item<T> *tail = nullptr;
+    Item<T> *head = nullptr;
     List() : fake_node()
     {
       fake_node.next = nullptr;
@@ -49,10 +49,10 @@ namespace volkovich
       return fake_node.next == nullptr;
     };
 
-    void popFront()
+    T popFront()
     {
       if (!head)
-        return;
+        throw std::logic_error("Empty list");
       Item<T> *old_head = head;
       fake_node.next = old_head->next;
       head = fake_node.next;
@@ -60,8 +60,10 @@ namespace volkovich
       {
         tail = nullptr;
       }
+      T deleted_value = old_head->data;
       delete old_head;
       list_len--;
+      return deleted_value;
     };
 
     void popBack()
@@ -220,6 +222,7 @@ namespace volkovich
     {
       return LCIter<T>(fake_node.next);
     };
+
     void swap(List &other) noexcept
     {
       using std::swap;
