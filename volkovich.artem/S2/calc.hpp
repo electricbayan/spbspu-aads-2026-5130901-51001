@@ -105,20 +105,20 @@ namespace volkovich {
           if (rhs > 0 && lhs > max - rhs || rhs < 0 && lhs < min - rhs) {
             throw std::overflow_error("Out of range numbers");
           }
-          return lhs + rhs;
+          numbers.push(lhs + rhs);
         } else if (token == "-") {
           if (rhs > 0 && lhs < min + rhs || rhs < 0 && lhs > max + rhs) {
             throw std::overflow_error("Out of range numbers");
           }
-          return lhs - rhs;
+          numbers.push(lhs - rhs);
         } else if (token == "/") {
           if (rhs == 0) {
             throw std::logic_error("Division by zero");
           }
-          if (lhs == -1 && rhs == min || rhs == -1 && lhs == min) {
+          if (lhs == min && rhs == -1) {
             throw std::overflow_error("Out of range numbers");
           }
-          return lhs / rhs;
+          numbers.push(lhs / rhs);
         } else if (token == "*") {
           if (lhs == -1 && rhs == min || rhs == -1 && lhs == min) {
             throw std::overflow_error("Out of range numbers");
@@ -132,15 +132,15 @@ namespace volkovich {
               throw std::overflow_error("Out of range numbers");
             }
           }
-          return lhs * rhs;
+          numbers.push(lhs * rhs);
         } else if (token == "%") {
           if (rhs == 0) {
             throw std::logic_error("Division by zero");
           }
-          if (lhs == -1 && rhs == min || rhs == -1 && lhs == min) {
+          if (lhs == min && rhs == -1) {
             throw std::overflow_error("Out of range numbers");
           }
-          return lhs % rhs;
+          numbers.push(lhs % rhs);
         }
       }
     }
