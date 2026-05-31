@@ -120,7 +120,7 @@ namespace volkovich {
           }
           numbers.push(lhs / rhs);
         } else if (token == "*") {
-          if (lhs == -1 && rhs == min || rhs == -1 && lhs == min) {
+          if ((lhs == -1 && rhs == min) || (rhs == -1 && lhs == min)) {
             throw std::overflow_error("Out of range numbers");
           }
           if (lhs > 0) {
