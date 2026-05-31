@@ -148,7 +148,7 @@ namespace volkovich {
             throw std::overflow_error("Out of range numbers");
           }
           ll res = lhs % rhs;
-          if (res > 0) {
+          if (res >= 0) {
             numbers.push(res);
           } else {
             numbers.push(mod(rhs) - mod(res));
