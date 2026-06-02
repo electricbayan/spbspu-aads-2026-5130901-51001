@@ -14,7 +14,7 @@ constexpr ll max = std::numeric_limits< ll >::max();
 namespace volkovich {
 
   size_t getPriority(const std::string& s) {
-    if (s == "*" || s == "/" || s == "%") {
+    if (s == "*" || s == "/" || s == "%" || s == "&") {
       return 2;
     }
     if (s == "+" || s == "-") {
@@ -154,6 +154,8 @@ namespace volkovich {
             numbers.push(mod(rhs) - mod(res));
           }
 
+        } else if (token == "&") {
+          numbers.push(lhs & rhs);
         }
       }
     }
