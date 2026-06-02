@@ -1,0 +1,41 @@
+#ifndef QUEUE_HPP
+#define QUEUE_HPP
+#include <stdexcept>
+
+#include "../common/list.hpp"
+
+namespace volkovich {
+  template < typename T >
+  class Queue {
+    List< T > data;
+
+   public:
+    bool isEmpty() const noexcept {
+      return data.isEmpty();
+    };
+
+    size_t length() noexcept {
+      return data.size();
+    };
+
+    void push(T&& v) {
+      data.pushBack(std::move(v));
+    };
+
+    void push(const T& v) {
+      data.pushBack(v);
+    };
+
+    T pop() {
+      if (isEmpty()) {
+        throw std::logic_error("Queue is empty");
+      }
+      return data.popFront();
+    };
+
+    void swap(Queue& other) {
+      data.swap(other.data);
+    }
+  };
+}
+#endif
