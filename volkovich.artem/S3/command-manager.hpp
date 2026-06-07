@@ -1,6 +1,7 @@
 #ifndef COMMAND_MANAGER
 #define COMMAND_MANAGER
 #include <iostream>
+#include "graph.hpp"
 namespace volkovich {
   class CommandManager {
 

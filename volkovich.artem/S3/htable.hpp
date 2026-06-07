@@ -2,23 +2,12 @@
 #define HTABLE
 #define DEFAULT_CAPACITY 8
 #define DEFAULT_BUCKET_COUNT 64
-#include <boost/container_hash/hash.hpp>
+#include <boost/hash2/siphash.hpp>
 #include <iostream>
 
 namespace volkovich {
   template < class Key, class Value, class Hash, class Equal >
   class HashTable {
-    struct SipHash {
-      std::size_t operator()(const std::string& key) const {
-        uint64_t hash = siphash(key.data(), key.size(), secret_key);
-        return static_cast< std::size_t >(hash);
-      }
-
-     private:
-      static constexpr uint8_t secret_key[16] = {
-          0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
-    };
-
     struct Record {
       Key key;
       Value value;
@@ -44,6 +33,12 @@ namespace volkovich {
       return s ? s : getFromOverflow(key);
     }
 
+    const Slot* get(const Key& key) const {
+      const Slot* s = getFromBucket(key, homeBucket(key));
+      return s ? s : getFromOverflow(key);
+    }
+
+
     Slot* getFromBucket(const Key& key, size_t bucketNum) {
       if (bucketNum > buckets_count_) {
         throw std::logic_error("Bucket outside range");
@@ -60,9 +55,36 @@ namespace volkovich {
       return nullptr;
     }
 
+    const Slot* getFromBucket(const Key& key, size_t bucketNum) const{
+      if (bucketNum > buckets_count_) {
+        throw std::logic_error("Bucket outside range");
+      }
+      for (size_t i = bucket_capacity_ * bucketNum; i < bucket_capacity_ * (bucketNum + 1); i++) {
+        const Slot& s = slots_[i];
+        if (s.state == Slot::State::EMPTY) {
+          return nullptr;
+        }
+        if (eq_(s.data.key, key)) {
+          return &s;
+        }
+      }
+      return nullptr;
+    }
+
+
     Slot* getFromOverflow(const Key& key) {
       for (size_t i = 0; i < overflow_size_; i++) {
         Slot& s = overflow_[i];
+        if (eq_(s.data.key, key)) {
+          return &s;
+        }
+      }
+      return nullptr;
+    };
+
+    const Slot* getFromOverflow(const Key& key) const {
+      for (size_t i = 0; i < overflow_size_; i++) {
+        const Slot& s = overflow_[i];
         if (eq_(s.data.key, key)) {
           return &s;
         }
@@ -116,7 +138,32 @@ namespace volkovich {
       real_size_++;
       return true;
     };
-    Value drop(Key k);
+
+    Value* find(const Key& key) {
+      Slot* s = get(key);
+      if (!s) {
+        return nullptr;
+      }
+      return s->data.value;
+    };
+
+    const Value* find(const Key& key) const{
+      const Slot* s = get(key);
+      if (!s) {
+        return nullptr;
+      }
+      return s->data.value;
+    };
+
+    Value drop(Key k) {
+      Slot* s = get(k);
+      if (s) {
+        s->state = Slot::State::TOMBSTONE;
+        real_size_--;
+        return s->data.value;
+      }
+
+    };
     bool has(Key k) {
       return get(k);
     };
@@ -129,16 +176,22 @@ namespace volkovich {
     };
 
     ~HashTable() {
+      delete[] slots_;
+      delete[] overflow_;
+    };
+    HashTable(HashTable&& other) {
 
     };
-    HashTable(HashTable&& other);
-    HashTable(const HashTable& other);
+    HashTable(const HashTable& other) {
+
+    };
     HashTable& operator=(HashTable&& other);
-    HashTable operator=(const HashTable& other);
+    HashTable& operator=(const HashTable& other);
     void swap(HashTable& other);
     size_t table_size();
-    bool isEmpty();
-    Record* get(K key);
+    bool isEmpty() {
+      return real_size_==0;
+    };
   };
 
 }
