@@ -2,6 +2,7 @@
 #define HTABLE
 #define DEFAULT_CAPACITY 8
 #define DEFAULT_BUCKET_COUNT 64
+#define DEFAULT_OVERFLOW_SIZE 64
 #include <boost/hash2/siphash.hpp>
 #include <iostream>
 
@@ -20,7 +21,8 @@ namespace volkovich {
     };
 
     Slot *slots_{}, *overflow_{};
-    size_t buckets_count_, bucket_capacity_ = DEFAULT_CAPACITY, overflow_size_, real_size_;
+    size_t buckets_count_ = DEFAULT_BUCKET_COUNT, bucket_capacity_ = DEFAULT_CAPACITY,
+           overflow_size_ = 0, real_size_ = 0;
     Hash hashf_;
     Equal eq_;
 
@@ -38,10 +40,9 @@ namespace volkovich {
       return s ? s : getFromOverflow(key);
     }
 
-
     Slot* getFromBucket(const Key& key, size_t bucketNum) {
-      if (bucketNum > buckets_count_) {
-        throw std::logic_error("Bucket outside range");
+      if (bucketNum >= buckets_count_) {
+        throw std::out_of_range("Bucket outside range");
       }
       for (size_t i = bucket_capacity_ * bucketNum; i < bucket_capacity_ * (bucketNum + 1); i++) {
         Slot& s = slots_[i];
@@ -55,9 +56,9 @@ namespace volkovich {
       return nullptr;
     }
 
-    const Slot* getFromBucket(const Key& key, size_t bucketNum) const{
-      if (bucketNum > buckets_count_) {
-        throw std::logic_error("Bucket outside range");
+    const Slot* getFromBucket(const Key& key, size_t bucketNum) const {
+      if (bucketNum >= buckets_count_) {
+        throw std::out_of_range("Bucket outside range");
       }
       for (size_t i = bucket_capacity_ * bucketNum; i < bucket_capacity_ * (bucketNum + 1); i++) {
         const Slot& s = slots_[i];
@@ -70,7 +71,6 @@ namespace volkovich {
       }
       return nullptr;
     }
-
 
     Slot* getFromOverflow(const Key& key) {
       for (size_t i = 0; i < overflow_size_; i++) {
@@ -144,33 +144,38 @@ namespace volkovich {
       if (!s) {
         return nullptr;
       }
-      return s->data.value;
+      return &s->data.value;
     };
 
-    const Value* find(const Key& key) const{
+    const Value* find(const Key& key) const {
       const Slot* s = get(key);
       if (!s) {
         return nullptr;
       }
-      return s->data.value;
+      return &s->data.value;
     };
 
-    Value drop(Key k) {
+    Value drop(const Key& k) {
       Slot* s = get(k);
-      if (s) {
-        s->state = Slot::State::TOMBSTONE;
-        real_size_--;
-        return s->data.value;
+      if (!s) {
+        throw std::out_of_range("Key not found");
       }
+      s->state = Slot::State::TOMBSTONE;
+      real_size_--;
+      return s->data.value;
 
     };
     bool has(Key k) {
-      return get(k);
+      return get(k) != nullptr;
     };
     void rehash(size_t slots);
 
-    HashTable(size_t bucket_count = DEFAULT_BUCKET_COUNT, size_t bucket_capacity = DEFAULT_CAPACITY)
-        : buckets_count_(bucket_count), bucket_capacity_(bucket_capacity) {
+    HashTable(Hash hash_func, size_t bucket_count = DEFAULT_BUCKET_COUNT,
+        size_t bucket_capacity = DEFAULT_CAPACITY, size_t overflow_size = DEFAULT_OVERFLOW_SIZE)
+        : buckets_count_(bucket_count),
+          bucket_capacity_(bucket_capacity),
+          hashf_(hash_func),
+          overflow_size_(overflow_size) {
       slots_ = new Slot[bucket_capacity * bucket_count];
       overflow_ = new Slot[overflow_size_];
     };
@@ -179,18 +184,76 @@ namespace volkovich {
       delete[] slots_;
       delete[] overflow_;
     };
-    HashTable(HashTable&& other) {
 
+    HashTable(HashTable&& other)
+        : buckets_count_(other.buckets_count_),
+          bucket_capacity_(other.bucket_capacity_),
+          slots_(other.slots_),
+          overflow_(other.overflow_),
+          real_size_(other.real_size_),
+          hashf_(std::move(other.hashf_)),
+          eq_(std::move(other.eq_)) {
+      other.slots_ = nullptr;
+      other.overflow_ = nullptr;
+      other.real_size_ = 0;
+      other.overflow_size_ = 0;
+      other.buckets_count_ = 0;
     };
-    HashTable(const HashTable& other) {
 
+    HashTable(const HashTable& other)
+        : buckets_count_(other.buckets_count_),
+          bucket_capacity_(other.bucket_capacity_),
+          hashf_(other.hashf_),
+          slots_(other.slots_),
+          overflow_(other.overflow_),
+          real_size_(other.real_size_),
+          hashf_(other.hashf_),
+          eq_(other.eq_) {
+      slots_ = new Slot[other.buckets_count_ * other.bucket_capacity_];
+      for (size_t i = 0; i < other.buckets_count_ * other.bucket_capacity_; i++) {
+        slots_[i] = other.slots_[i];
+      }
+      try {
+        overflow_ = new Slot[other.overflow_size_];
+      } catch (...) {
+        delete[] slots_;
+        delete[] overflow_;
+        throw std::bad_alloc("Error while initializing HTable");
+      }
+      for (size_t i = 0; i < other.overflow_size_; i++) {
+        overflow_[i] = other.overflow_[i];
+      }
     };
-    HashTable& operator=(HashTable&& other);
-    HashTable& operator=(const HashTable& other);
-    void swap(HashTable& other);
-    size_t table_size();
-    bool isEmpty() {
-      return real_size_==0;
+
+    HashTable& operator=(HashTable&& other) {
+      swap(other);
+      return *this;
+    };
+
+    HashTable& operator=(const HashTable& other) {
+      if (this == &other) return *this;
+      HashTable tmp(other);
+      swap(tmp);
+      return *this;
+    };
+
+    void swap(HashTable& other) noexcept {
+      std::swap(slots_, other.slots_);
+      std::swap(overflow_, other.overflow_);
+      std::swap(bucket_capacity_, other.bucket_capacity_);
+      std::swap(buckets_count_, other.buckets_count_);
+      std::swap(overflow_size_, other.overflow_size_);
+      std::swap(real_size_, other.real_size_);
+      std::swap(hashf_, other.hashf_);
+      std::swap(eq_, other.eq_);
+    };
+
+    size_t table_size() const noexcept {
+      return real_size_;
+    };
+
+    bool isEmpty() const noexcept {
+      return real_size_ == 0;
     };
   };
 
