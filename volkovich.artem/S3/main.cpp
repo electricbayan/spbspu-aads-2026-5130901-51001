@@ -18,7 +18,7 @@ int main(int argc, char* argv[]) {
   std::string command;
   while (std::cin >> command) {
     try {
-      // cm.readCommand(command);
+      cm.readCommand(command);
     } catch (std::exception& e) {
       std::cerr << e.what() << '\n';
       return 1;

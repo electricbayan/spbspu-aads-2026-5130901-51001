@@ -36,7 +36,7 @@ namespace volkovich {
       friend class HashTable;
       Slot *cur_, *buckets_end_;
       Slot *overflow_begin_, *overflow_end_;
-      bool in_overflow=false;
+      bool in_overflow = false;
 
      public:
       void findNotEmpty() {
@@ -96,7 +96,7 @@ namespace volkovich {
       friend class HashTable;
       const Slot *cur_, *buckets_end_;
       const Slot *overflow_begin_, *overflow_end_;
-      bool in_overflow=false;
+      bool in_overflow = false;
 
      public:
       void findNotEmpty() {
@@ -115,7 +115,8 @@ namespace volkovich {
         }
       }
 
-      constIterator(const Slot* start_, size_t slot_count, const Slot* overflow, size_t overflow_size)
+      constIterator(
+          const Slot* start_, size_t slot_count, const Slot* overflow, size_t overflow_size)
           : cur_(start_),
             buckets_end_(start_ + slot_count),
             overflow_begin_(overflow),
@@ -134,14 +135,14 @@ namespace volkovich {
         return *this;
       };
       constIterator operator++(int) {
-        iterator tmp = *this;
+        constIterator tmp = *this;
         ++(*this);
         return tmp;
       }
-      bool operator==(const iterator& other) const {
+      bool operator==(const constIterator& other) const {
         return cur_ == other.cur_;
       }
-      bool operator!=(const iterator& other) const {
+      bool operator!=(const constIterator& other) const {
         return cur_ != other.cur_;
       }
       const Record& operator*() const {
@@ -154,7 +155,7 @@ namespace volkovich {
 
     Slot *slots_{}, *overflow_{};
     size_t buckets_count_ = DEFAULT_BUCKET_COUNT, bucket_capacity_ = DEFAULT_CAPACITY,
-           overflow_capacity_ = DEFAULT_OVERFLOW_CAPACITY, real_size_ = 0, real_overflow_size=0;
+           overflow_capacity_ = DEFAULT_OVERFLOW_CAPACITY, real_size_ = 0, real_overflow_size = 0;
     Hash hashf_;
     Equal eq_;
 
@@ -254,8 +255,7 @@ namespace volkovich {
              static_cast< double >(bucket_capacity_ * buckets_count_);
     }
     double overflowLoadFactor() const {
-      return static_cast< double >(real_overflow_size) /
-             static_cast< double >(overflow_capacity_);
+      return static_cast< double >(real_overflow_size) / static_cast< double >(overflow_capacity_);
     }
 
    public:
@@ -269,7 +269,8 @@ namespace volkovich {
       return it;
     };
     constIterator begin() const {
-      return constIterator(slots_, bucket_capacity_ * buckets_count_, overflow_, overflow_capacity_);
+      return constIterator(
+          slots_, bucket_capacity_ * buckets_count_, overflow_, overflow_capacity_);
     };
     constIterator end() const {
       constIterator it(slots_, bucket_capacity_ * buckets_count_, overflow_, overflow_capacity_);
@@ -291,7 +292,6 @@ namespace volkovich {
         if (dest) {
           real_overflow_size++;
         }
-
       }
       if (!dest) {
         return false;
@@ -353,7 +353,8 @@ namespace volkovich {
     };
 
     HashTable(Hash hash_func, size_t bucket_count = DEFAULT_BUCKET_COUNT,
-        size_t overflow_capacity = DEFAULT_OVERFLOW_CAPACITY, size_t bucket_capacity = DEFAULT_CAPACITY)
+        size_t overflow_capacity = DEFAULT_OVERFLOW_CAPACITY,
+        size_t bucket_capacity = DEFAULT_CAPACITY)
         : buckets_count_(bucket_count),
           bucket_capacity_(bucket_capacity),
           overflow_capacity_(overflow_capacity),
@@ -361,6 +362,14 @@ namespace volkovich {
       slots_ = new Slot[bucket_capacity * bucket_count];
       overflow_ = new Slot[overflow_capacity_];
     };
+    HashTable()
+        : buckets_count_(DEFAULT_BUCKET_COUNT),
+          bucket_capacity_(DEFAULT_CAPACITY),
+          overflow_capacity_(DEFAULT_OVERFLOW_CAPACITY),
+          hashf_(SipHash{}),
+          slots_({}),
+          overflow_({})
+    {};
 
     ~HashTable() {
       delete[] slots_;
@@ -368,10 +377,10 @@ namespace volkovich {
     };
 
     HashTable(HashTable&& other)
-        : buckets_count_(other.buckets_count_),
-          bucket_capacity_(other.bucket_capacity_),
-          slots_(other.slots_),
+        : slots_(other.slots_),
           overflow_(other.overflow_),
+          buckets_count_(other.buckets_count_),
+          bucket_capacity_(other.bucket_capacity_),
           overflow_capacity_(other.overflow_capacity_),
           real_size_(other.real_size_),
           real_overflow_size(other.real_overflow_size),
@@ -390,9 +399,9 @@ namespace volkovich {
         : buckets_count_(other.buckets_count_),
           bucket_capacity_(other.bucket_capacity_),
           overflow_capacity_(other.overflow_capacity_),
-          hashf_(other.hashf_),
           real_size_(other.real_size_),
           real_overflow_size(other.real_overflow_size),
+          hashf_(other.hashf_),
           eq_(other.eq_) {
       slots_ = new Slot[other.buckets_count_ * other.bucket_capacity_];
       for (size_t i = 0; i < other.buckets_count_ * other.bucket_capacity_; i++) {
