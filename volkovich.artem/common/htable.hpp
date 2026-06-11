@@ -54,6 +54,12 @@ namespace volkovich {
           return;
         }
       }
+      Value* current_val() {
+        if (cur_) {
+          return &cur_->data.value;
+        }
+        return nullptr;
+      }
 
       iterator(Slot* start_, size_t slot_count, Slot* overflow, size_t overflow_size)
           : cur_(start_),
@@ -366,10 +372,10 @@ namespace volkovich {
         : buckets_count_(DEFAULT_BUCKET_COUNT),
           bucket_capacity_(DEFAULT_CAPACITY),
           overflow_capacity_(DEFAULT_OVERFLOW_CAPACITY),
-          hashf_(SipHash{}),
-          slots_({}),
-          overflow_({})
-    {};
+          hashf_() {
+      slots_ = new Slot[bucket_capacity_ * buckets_count_];
+      overflow_ = new Slot[overflow_capacity_];
+    };
 
     ~HashTable() {
       delete[] slots_;

@@ -1,6 +1,6 @@
 #include <boost/hash2/hash_append.hpp>
 #include <fstream>
-
+#include <string>
 #include "command-manager.hpp"
 
 int main(int argc, char* argv[]) {
@@ -16,9 +16,9 @@ int main(int argc, char* argv[]) {
 
   volkovich::CommandManager cm;
   std::string command;
-  while (std::cin >> command) {
+  while (std::getline(std::cin, command)) {
     try {
-      cm.readCommand(command);
+      cm.readCommand(command, std::cin, std::cout);
     } catch (std::exception& e) {
       std::cerr << e.what() << '\n';
       return 1;

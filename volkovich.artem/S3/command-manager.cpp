@@ -1,36 +1,43 @@
 #include "command-manager.hpp"
 
 namespace volkovich {
-  class CommandManager {
-    void handleGraphs(std::istream&, std::ostream&) {};
-    void handleVertexes(std::istream& input, std::ostream& output) {};
-    void handleOutbound(std::istream& input, std::ostream& output) {};
-    void handleInbound(std::istream& input, std::ostream& output) {};
-    void handleBind(std::istream& input, std::ostream& output) {};
-    void handleCut(std::istream& input, std::ostream& output) {};
-    void handleCreate(std::istream& input, std::ostream& output) {};
-    void handleMerge(std::istream& input, std::ostream& output) {};
-    void handleExtract(std::istream& input, std::ostream& output) {};
+  void CommandManager::handleGraphs(std::istream&, std::ostream&) {};
+  void CommandManager::handleVertexes(std::istream& input, std::ostream& output) {};
+  void CommandManager::handleOutbound(std::istream& input, std::ostream& output) {};
+  void CommandManager::handleInbound(std::istream& input, std::ostream& output) {};
+  void CommandManager::handleBind(std::istream& input, std::ostream& output) {};
+  void CommandManager::handleCut(std::istream& input, std::ostream& output) {};
+  void CommandManager::handleCreate(std::istream& input, std::ostream& output) {};
+  void CommandManager::handleMerge(std::istream& input, std::ostream& output) {};
+  void CommandManager::handleExtract(std::istream& input, std::ostream& output) {};
 
-    using Handler = void (CommandManager::*)(std::istream&, std::ostream&);
-    HashTable<std::string, Handler, SipHash, std::equal_to<std::string>> commands_;
-   public:
-    CommandManager() {
-      commands_.add("graphs", handleGraphs);
-      commands_.add("vertexes", handleVertexes);
-      commands_.add("outbound", handleOutbound);
-      commands_.add("inbound", handleInbound);
-      commands_.add("bind", handleBind);
-      commands_.add("cut", handleCut);
-      commands_.add("create", handleCreate);
-      commands_.add("merge", handleMerge);
-      commands_.add("extract", handleExtract);
+  CommandManager::CommandManager() {
+    commands_.add("graphs", &CommandManager::handleGraphs);
+    commands_.add("vertexes", &CommandManager::handleVertexes);
+    commands_.add("outbound", &CommandManager::handleOutbound);
+    commands_.add("inbound", &CommandManager::handleInbound);
+    commands_.add("bind", &CommandManager::handleBind);
+    commands_.add("cut", &CommandManager::handleCut);
+    commands_.add("create", &CommandManager::handleCreate);
+    commands_.add("merge", &CommandManager::handleMerge);
+    commands_.add("extract", &CommandManager::handleExtract);
+  }
+
+  void CommandManager::readCommand(
+      const std::string& command, std::istream& input, std::ostream& output) {
+    if (command.empty()) {
+      return;
     }
-    void readCommand(const std::string& command, std::istream& input, std::ostream& output) {
-      if (command.empty()) {
-        return;
-      }
+    std::stringstream ss (command);
+    std::string instruction;
+    ss >> instruction;
+    Handler* fn = commands_.find(instruction);
+    if (!fn) {
+      output << "<INVALID COMMAND>\n";
+      return;
+    }
+    (this->**fn)(input, output);
 
-    };
   };
+
 }
