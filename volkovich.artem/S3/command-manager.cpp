@@ -1,8 +1,26 @@
 #include "command-manager.hpp"
 
 namespace volkovich {
-  void CommandManager::handleGraphs(std::istream&, std::ostream&) {};
-  void CommandManager::handleVertexes(std::istream& input, std::ostream& output) {};
+  void CommandManager::handleGraphs(std::istream&, std::ostream& output) {
+    for (auto it = gr.begin(); it != gr.end(); ++it) {
+      output << it->key << '\n';
+    }
+  };
+  void CommandManager::handleVertexes(std::istream& input, std::ostream& output) {
+    std::string name;
+    if (!(input >> name)) {
+      output << "<INVALID COMMAND>\n";
+      return;
+    }
+    auto graph = gr.graphs_.find(name);
+    if (!graph) {
+      output << "<INVALID COMMAND>\n";
+      return;
+    }
+    for (auto it = graph->graph_.begin(); it != graph->graph_.end(); ++it) {
+      output << it->key << '\n';
+    }
+  };
   void CommandManager::handleOutbound(std::istream& input, std::ostream& output) {};
   void CommandManager::handleInbound(std::istream& input, std::ostream& output) {};
   void CommandManager::handleBind(std::istream& input, std::ostream& output) {};
@@ -11,7 +29,8 @@ namespace volkovich {
   void CommandManager::handleMerge(std::istream& input, std::ostream& output) {};
   void CommandManager::handleExtract(std::istream& input, std::ostream& output) {};
 
-  CommandManager::CommandManager() {
+  CommandManager::CommandManager(CommandManager::GraphTable gr):
+        gr(gr) {
     commands_.add("graphs", &CommandManager::handleGraphs);
     commands_.add("vertexes", &CommandManager::handleVertexes);
     commands_.add("outbound", &CommandManager::handleOutbound);
@@ -21,14 +40,14 @@ namespace volkovich {
     commands_.add("create", &CommandManager::handleCreate);
     commands_.add("merge", &CommandManager::handleMerge);
     commands_.add("extract", &CommandManager::handleExtract);
+
   }
 
-  void CommandManager::readCommand(
-      const std::string& command, std::istream& input, std::ostream& output) {
+  void CommandManager::readCommand(const std::string& command, std::ostream& output) {
     if (command.empty()) {
       return;
     }
-    std::stringstream ss (command);
+    std::stringstream ss(command);
     std::string instruction;
     ss >> instruction;
     Handler* fn = commands_.find(instruction);
@@ -36,8 +55,7 @@ namespace volkovich {
       output << "<INVALID COMMAND>\n";
       return;
     }
-    (this->**fn)(input, output);
-
+    (this->**fn)(ss, output);
   };
 
 }
