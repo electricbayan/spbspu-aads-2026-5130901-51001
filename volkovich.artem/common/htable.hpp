@@ -32,6 +32,7 @@ namespace volkovich {
       State state = State::EMPTY;
     };
 
+   public:
     class iterator {
       friend class HashTable;
       Slot *cur_, *buckets_end_;
@@ -53,12 +54,6 @@ namespace volkovich {
           }
           return;
         }
-      }
-      Value* current_val() {
-        if (cur_) {
-          return &cur_->data.value;
-        }
-        return nullptr;
       }
 
       iterator(Slot* start_, size_t slot_count, Slot* overflow, size_t overflow_size)
@@ -159,6 +154,7 @@ namespace volkovich {
       }
     };
 
+   private:
     Slot *slots_{}, *overflow_{};
     size_t buckets_count_ = DEFAULT_BUCKET_COUNT, bucket_capacity_ = DEFAULT_CAPACITY,
            overflow_capacity_ = DEFAULT_OVERFLOW_CAPACITY, real_size_ = 0, real_overflow_size = 0;

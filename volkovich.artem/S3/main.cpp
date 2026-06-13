@@ -1,6 +1,7 @@
 #include <boost/hash2/hash_append.hpp>
 #include <fstream>
 #include <string>
+
 #include "command-manager.hpp"
 
 int main(int argc, char* argv[]) {
@@ -14,11 +15,14 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
-  volkovich::CommandManager cm;
+  volkovich::Graphs< std::string, volkovich::SipHash, std::equal_to< std::string > > graphs;
+  graphs.readGraphsFromFile(file);
+
+  volkovich::CommandManager cm(graphs);
   std::string command;
   while (std::getline(std::cin, command)) {
     try {
-      cm.readCommand(command, std::cin, std::cout);
+      cm.readCommand(command, std::cout);
     } catch (std::exception& e) {
       std::cerr << e.what() << '\n';
       return 1;

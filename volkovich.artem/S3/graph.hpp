@@ -1,12 +1,12 @@
 #ifndef GRAPH
 #define GRAPH
-#include "../common/htable.hpp"
-
 #include <fstream>
 #include <sstream>
 #include <stdexcept>
 #include <string>
 #include <utility>
+
+#include "../common/htable.hpp"
 
 namespace volkovich {
   template < class Vertex, class Hash, class Equal >
@@ -67,7 +67,8 @@ namespace volkovich {
       }
     }
 
-    Graph(Graph&& other) noexcept : graph_(std::move(other.graph_)) {}
+    Graph(Graph&& other) noexcept : graph_(std::move(other.graph_)) {
+    }
 
     Graph& operator=(const Graph& other) {
       if (this != &other) {
@@ -103,7 +104,8 @@ namespace volkovich {
       appendEdge(*edges_from, Edge{to, weight});
     }
 
-    void removeEdge() {}
+    void removeEdge() {
+    }
 
     bool hasVertex(const Vertex& v) const {
       return graph_.has(v);
