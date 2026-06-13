@@ -207,7 +207,6 @@ namespace volkovich {
       }
       new_graph->addVertex(vertex_name);
     }
-
     // for (auto it = new_graph->graph_.begin(); it != new_graph->graph_.end(); ++it) {
     //   auto old_
     // }
