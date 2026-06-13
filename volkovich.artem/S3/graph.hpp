@@ -168,6 +168,21 @@ namespace volkovich {
     bool hasEdge(const Vertex& from, const Vertex& to) const {
       return getEdge(from, to) != nullptr;
     }
+
+    void mergeFrom(const Graph& other) {
+      for (auto it = other.graph_.begin(); it != other.graph_.end(); ++it) {
+        if (!hasVertex(it->key)) {
+          addVertex(it->key);
+        }
+      }
+      for (auto it = other.graph_.begin(); it != other.graph_.end(); ++it) {
+        for (size_t i = 0; i < it->value.count; ++i) {
+          if (!hasEdge(it->key, it->value.edges[i].to)) {
+            addEdge(it->key, it->value.edges[i].to, it->value.edges[i].weight);
+          }
+        }
+      }
+    }
   };
 
   template < class Vertex, class Hash, class Equal >
@@ -177,8 +192,8 @@ namespace volkovich {
    public:
     using iterator = typename GraphMap::iterator;
     using const_iterator = typename GraphMap::constIterator;
-
-    HashTable< std::string, Graph< Vertex, Hash, Equal >, Hash, Equal > graphs_;
+    using SubGraph = Graph< Vertex, Hash, Equal >;
+    HashTable< std::string, SubGraph, Hash, Equal > graphs_;
 
     iterator begin() {
       return graphs_.begin();
@@ -223,6 +238,15 @@ namespace volkovich {
         }
         graphs_.add(name, gr);
       }
+    }
+
+    SubGraph& addGraph(const std::string& name) {
+      SubGraph gr;
+      if (!graphs_.add(name, gr)) {
+        throw std::logic_error("Graph exists");
+      }
+      SubGraph* stored = graphs_.find(name);
+      return *stored;
     }
   };
 }

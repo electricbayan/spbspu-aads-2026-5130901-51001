@@ -21,10 +21,10 @@ namespace volkovich {
     void handleExtract(std::istream&, std::ostream&);
     using GraphTable =
         volkovich::Graphs< std::string, volkovich::SipHash, std::equal_to< std::string > >;
-    GraphTable gr;
+    GraphTable& gr;
 
    public:
-    CommandManager(GraphTable gr);
+    CommandManager(GraphTable& gr);
     void readCommand(const std::string& command, std::ostream& output);
   };
 }

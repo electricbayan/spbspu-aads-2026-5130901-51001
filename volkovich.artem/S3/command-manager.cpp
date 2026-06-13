@@ -1,9 +1,18 @@
 #include "command-manager.hpp"
 
+#include <algorithm>
+#include <utility>
+#include <vector>
+
 namespace volkovich {
   void CommandManager::handleGraphs(std::istream&, std::ostream& output) {
+    std::vector<std::string> names;
     for (auto it = gr.begin(); it != gr.end(); ++it) {
-      output << it->key << '\n';
+      names.push_back(it->key);
+    }
+    std::sort(names.begin(), names.end());
+    for (const auto& name : names) {
+      output << name << '\n';
     }
   };
   void CommandManager::handleVertexes(std::istream& input, std::ostream& output) {
@@ -17,8 +26,13 @@ namespace volkovich {
       output << "<INVALID COMMAND>\n";
       return;
     }
+    std::vector<std::string> vertexes;
     for (auto it = graph->graph_.begin(); it != graph->graph_.end(); ++it) {
-      output << it->key << '\n';
+      vertexes.push_back(it->key);
+    }
+    std::sort(vertexes.begin(), vertexes.end());
+    for (const auto& vertex : vertexes) {
+      output << vertex << '\n';
     }
   };
   void CommandManager::handleOutbound(std::istream& input, std::ostream& output) {
@@ -37,8 +51,13 @@ namespace volkovich {
       output << "<INVALID COMMAND>\n";
       return;
     }
+    std::vector<std::pair<std::string, int>> edges;
     for (size_t i = 0; i < vertex->count; i++) {
-      output << vertex->edges[i].to << ' ' << vertex->edges[i].weight << '\n';
+      edges.emplace_back(vertex->edges[i].to, vertex->edges[i].weight);
+    }
+    std::sort(edges.begin(), edges.end());
+    for (const auto& edge : edges) {
+      output << edge.first << ' ' << edge.second << '\n';
     }
   };
   void CommandManager::handleInbound(std::istream& input, std::ostream& output) {
@@ -52,12 +71,17 @@ namespace volkovich {
       output << "<INVALID COMMAND>\n";
       return;
     }
+    std::vector<std::pair<std::string, int>> edges;
     for (auto it = graph->graph_.begin(); it != graph->graph_.end(); ++it) {
       for (size_t i = 0; i < it->value.count; i++) {
         if (it->value.edges[i].to == vertex_name) {
-          output << it->key << ' ' << it->value.edges[i].weight << '\n';
+          edges.emplace_back(it->key, it->value.edges[i].weight);
         }
       }
+    }
+    std::sort(edges.begin(), edges.end());
+    for (const auto& edge : edges) {
+      output << edge.first << ' ' << edge.second << '\n';
     }
   };
   void CommandManager::handleBind(std::istream& input, std::ostream& output) {
@@ -107,12 +131,55 @@ namespace volkovich {
     graph->removeEdge(from_name, to_name);
   };
   void CommandManager::handleCreate(std::istream& input, std::ostream& output) {
-
+    std::string graph_name;
+    size_t vertex_count=0;
+    if (!(input >> graph_name)) {
+      output << "<INVALID COMMAND>\n";
+      return;
+    }
+    input >> vertex_count;
+    auto graph = gr.graphs_.find(graph_name);
+    if (graph) {
+      output << "<INVALID COMMAND>\n";
+      return;
+    }
+    auto& new_graph = gr.addGraph(graph_name);
+    for (size_t i = 0; i<vertex_count;i++) {
+      std::string vertex_name;
+      if (!(input>>vertex_name)) {
+        output << "<INVALID COMMAND>\n";
+        return;
+      }
+      new_graph.addVertex(vertex_name);
+    }
   };
-  void CommandManager::handleMerge(std::istream& input, std::ostream& output) {};
+  void CommandManager::handleMerge(std::istream& input, std::ostream& output) {
+    std::string new_graph_name, old_graph_name_first, old_graph_name_second;
+    if (!(input >> new_graph_name >> old_graph_name_first >> old_graph_name_second)) {
+      output << "<INVALID COMMAND>\n";
+      return;
+    }
+    auto old_graph1 = gr.graphs_.find(old_graph_name_first);
+    if (!old_graph1) {
+      output << "<INVALID COMMAND>\n";
+      return;
+    }
+    auto old_graph2 = gr.graphs_.find(old_graph_name_second);
+    if (!old_graph2) {
+      output << "<INVALID COMMAND>\n";
+      return;
+    }
+    if (gr.graphs_.find(new_graph_name)) {
+      output << "<INVALID COMMAND>\n";
+      return;
+    }
+    auto& new_graph = gr.addGraph(new_graph_name);
+    new_graph.mergeFrom(*old_graph1);
+    new_graph.mergeFrom(*old_graph2);
+  };
   void CommandManager::handleExtract(std::istream& input, std::ostream& output) {};
 
-  CommandManager::CommandManager(CommandManager::GraphTable gr) : gr(gr) {
+  CommandManager::CommandManager(CommandManager::GraphTable& gr) : gr(gr) {
     commands_.add("graphs", &CommandManager::handleGraphs);
     commands_.add("vertexes", &CommandManager::handleVertexes);
     commands_.add("outbound", &CommandManager::handleOutbound);
