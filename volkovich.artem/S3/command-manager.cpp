@@ -10,6 +10,10 @@ namespace volkovich {
     for (auto it = gr.begin(); it != gr.end(); ++it) {
       names.push_back(it->key);
     }
+    if (names.empty()) {
+      output<<'\n';
+      return;
+    }
     std::sort(names.begin(), names.end());
     for (const auto& name : names) {
       output << name << '\n';
@@ -29,6 +33,10 @@ namespace volkovich {
     std::vector< std::string > vertexes;
     for (auto it = graph->graph_.begin(); it != graph->graph_.end(); ++it) {
       vertexes.push_back(it->key);
+    }
+    if (vertexes.empty()) {
+      output<<'\n';
+      return;
     }
     std::sort(vertexes.begin(), vertexes.end());
     for (const auto& vertex : vertexes) {
@@ -96,6 +104,7 @@ namespace volkovich {
       return;
     }
     if (weight == 0) {
+      output << "<INVALID COMMAND>\n";
       return;
     }
     auto graph = gr.graphs_.find(graph_name);
