@@ -44,6 +44,28 @@ namespace volkovich {
       ++list.count;
     }
 
+    void removeEdgeAt(EdgeList& list, size_t index) {
+      if (index >= list.count) {
+        return;
+      }
+      if (list.count == 1) {
+        delete[] list.edges;
+        list.edges = nullptr;
+        list.count = 0;
+        return;
+      }
+      Edge* new_edges = new Edge[list.count - 1];
+      size_t pos = 0;
+      for (size_t i = 0; i < list.count; ++i) {
+        if (i != index) {
+          new_edges[pos++] = list.edges[i];
+        }
+      }
+      delete[] list.edges;
+      list.edges = new_edges;
+      --list.count;
+    }
+
     void freeAllEdges() {
       for (auto it = graph_.begin(); it != graph_.end(); ++it) {
         delete[] it->value.edges;
@@ -95,8 +117,12 @@ namespace volkovich {
     }
 
     void addEdge(const Vertex& from, const Vertex& to, int weight) {
-      addVertex(from);
-      addVertex(to);
+      if (!hasVertex(from)) {
+        addVertex(from);
+      }
+      if (!hasVertex(to)) {
+        addVertex(to);
+      }
       EdgeList* edges_from = graph_.find(from);
       if (!edges_from) {
         return;
@@ -104,11 +130,43 @@ namespace volkovich {
       appendEdge(*edges_from, Edge{to, weight});
     }
 
-    void removeEdge() {
+    void removeEdge(const Vertex& from, const Vertex& to) {
+      EdgeList* edges_from = graph_.find(from);
+      if (!edges_from) {
+        return;
+      }
+      for (size_t i = 0; i < edges_from->count; ++i) {
+        if (edges_from->edges[i].to == to) {
+          removeEdgeAt(*edges_from, i);
+          return;
+        }
+      }
     }
 
     bool hasVertex(const Vertex& v) const {
       return graph_.has(v);
+    }
+
+    const Edge* getEdge(const Vertex& from, const Vertex& to) const {
+      const EdgeList* edges_from = graph_.find(from);
+      if (!edges_from) {
+        return nullptr;
+      }
+      for (size_t i = 0; i < edges_from->count; ++i) {
+        if (edges_from->edges[i].to == to) {
+          return &edges_from->edges[i];
+        }
+      }
+      return nullptr;
+    }
+
+    bool hasEdge(const Vertex& from, const Vertex& to, int weight) const {
+      const Edge* edge = getEdge(from, to);
+      return edge && edge->weight == weight;
+    }
+
+    bool hasEdge(const Vertex& from, const Vertex& to) const {
+      return getEdge(from, to) != nullptr;
     }
   };
 

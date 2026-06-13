@@ -80,8 +80,35 @@ namespace volkovich {
     }
     graph->addEdge(from_name, to_name, weight);
   };
-  void CommandManager::handleCut(std::istream& input, std::ostream& output) {};
-  void CommandManager::handleCreate(std::istream& input, std::ostream& output) {};
+  void CommandManager::handleCut(std::istream& input, std::ostream& output) {
+    std::string graph_name, from_name, to_name;
+    int weight;
+    if (!(input >> graph_name >> from_name >> to_name >> weight)) {
+      output << "<INVALID COMMAND>\n";
+      return;
+    }
+    auto graph = gr.graphs_.find(graph_name);
+    if (!graph) {
+      output << "<INVALID COMMAND>\n";
+      return;
+    }
+    if (!graph->hasVertex(from_name)) {
+      output << "<INVALID COMMAND>\n";
+      return;
+    }
+    if (!graph->hasVertex(to_name)) {
+      output << "<INVALID COMMAND>\n";
+      return;
+    }
+    if (!graph->hasEdge(from_name, to_name, weight)) {
+      output << "<INVALID COMMAND>\n";
+      return;
+    }
+    graph->removeEdge(from_name, to_name);
+  };
+  void CommandManager::handleCreate(std::istream& input, std::ostream& output) {
+
+  };
   void CommandManager::handleMerge(std::istream& input, std::ostream& output) {};
   void CommandManager::handleExtract(std::istream& input, std::ostream& output) {};
 
