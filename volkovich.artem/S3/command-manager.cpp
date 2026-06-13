@@ -6,7 +6,7 @@
 
 namespace volkovich {
   void CommandManager::handleGraphs(std::istream&, std::ostream& output) {
-    std::vector<std::string> names;
+    std::vector< std::string > names;
     for (auto it = gr.begin(); it != gr.end(); ++it) {
       names.push_back(it->key);
     }
@@ -26,7 +26,7 @@ namespace volkovich {
       output << "<INVALID COMMAND>\n";
       return;
     }
-    std::vector<std::string> vertexes;
+    std::vector< std::string > vertexes;
     for (auto it = graph->graph_.begin(); it != graph->graph_.end(); ++it) {
       vertexes.push_back(it->key);
     }
@@ -51,7 +51,7 @@ namespace volkovich {
       output << "<INVALID COMMAND>\n";
       return;
     }
-    std::vector<std::pair<std::string, int>> edges;
+    std::vector< std::pair< std::string, int > > edges;
     for (size_t i = 0; i < vertex->count; i++) {
       edges.emplace_back(vertex->edges[i].to, vertex->edges[i].weight);
     }
@@ -71,7 +71,7 @@ namespace volkovich {
       output << "<INVALID COMMAND>\n";
       return;
     }
-    std::vector<std::pair<std::string, int>> edges;
+    std::vector< std::pair< std::string, int > > edges;
     for (auto it = graph->graph_.begin(); it != graph->graph_.end(); ++it) {
       for (size_t i = 0; i < it->value.count; i++) {
         if (it->value.edges[i].to == vertex_name) {
@@ -132,7 +132,7 @@ namespace volkovich {
   };
   void CommandManager::handleCreate(std::istream& input, std::ostream& output) {
     std::string graph_name;
-    size_t vertex_count=0;
+    size_t vertex_count = 0;
     if (!(input >> graph_name)) {
       output << "<INVALID COMMAND>\n";
       return;
@@ -144,9 +144,9 @@ namespace volkovich {
       return;
     }
     auto& new_graph = gr.addGraph(graph_name);
-    for (size_t i = 0; i<vertex_count;i++) {
+    for (size_t i = 0; i < vertex_count; i++) {
       std::string vertex_name;
-      if (!(input>>vertex_name)) {
+      if (!(input >> vertex_name)) {
         output << "<INVALID COMMAND>\n";
         return;
       }
@@ -177,7 +177,40 @@ namespace volkovich {
     new_graph.mergeFrom(*old_graph1);
     new_graph.mergeFrom(*old_graph2);
   };
-  void CommandManager::handleExtract(std::istream& input, std::ostream& output) {};
+  void CommandManager::handleExtract(std::istream& input, std::ostream& output) {
+    std::string new_graph_name, old_graph_name;
+    size_t vertex_count = 0;
+    if (!(input >> new_graph_name >> old_graph_name)) {
+      output << "<INVALID COMMAND>\n";
+      return;
+    }
+    input >> vertex_count;
+    auto new_graph = gr.graphs_.find(new_graph_name);
+    if (new_graph) {
+      output << "<INVALID COMMAND>\n";
+      return;
+    }
+    auto old_graph = gr.graphs_.find(old_graph_name);
+    if (!old_graph) {
+      output << "<INVALID COMMAND>\n";
+      return;
+    }
+    for (size_t i = 0; i < vertex_count; i++) {
+      std::string vertex_name;
+      if (!(input >> vertex_name)) {
+        output << "<INVALID COMMAND>\n";
+        return;
+      }
+      if (!old_graph->hasVertex(vertex_name)) {
+        output << "<INVALID COMMAND>\n";
+        return;
+      }
+      new_graph->addVertex(vertex_name);
+    }
+    // for (auto it = new_graph->graph_.begin(); it != new_graph->graph_.end(); ++it) {
+    //   auto old_
+    // }
+  };
 
   CommandManager::CommandManager(CommandManager::GraphTable& gr) : gr(gr) {
     commands_.add("graphs", &CommandManager::handleGraphs);
