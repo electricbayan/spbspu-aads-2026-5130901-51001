@@ -234,6 +234,9 @@ namespace volkovich {
           if (!(estream >> from >> to >> weight)) {
             throw std::logic_error("Wrong graph description");
           }
+          if (weight == 0) {
+            continue;
+          }
           gr.addEdge(from, to, weight);
         }
         graphs_.add(name, gr);

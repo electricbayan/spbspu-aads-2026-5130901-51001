@@ -79,6 +79,10 @@ namespace volkovich {
         }
       }
     }
+    if (edges.empty()) {
+      output << "<INVALID COMMAND>\n";
+      return;
+    }
     std::sort(edges.begin(), edges.end());
     for (const auto& edge : edges) {
       output << edge.first << ' ' << edge.second << '\n';
@@ -89,6 +93,9 @@ namespace volkovich {
     int weight;
     if (!(input >> graph_name >> from_name >> to_name >> weight)) {
       output << "<INVALID COMMAND>\n";
+      return;
+    }
+    if (weight == 0) {
       return;
     }
     auto graph = gr.graphs_.find(graph_name);
