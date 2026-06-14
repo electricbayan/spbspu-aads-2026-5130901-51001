@@ -76,6 +76,7 @@ namespace volkovich {
       return lhs.to < rhs.to;
     });
     if (edges.empty()) {
+      output << '\n';
       return;
     }
     for (const auto& edge : edges) {
