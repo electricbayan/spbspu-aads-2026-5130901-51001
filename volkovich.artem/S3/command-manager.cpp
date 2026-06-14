@@ -76,7 +76,6 @@ namespace volkovich {
       return lhs.to < rhs.to;
     });
     if (edges.empty()) {
-      output << '\n';
       return;
     }
     for (const auto& edge : edges) {
@@ -142,10 +141,6 @@ namespace volkovich {
       output << "<INVALID COMMAND>\n";
       return;
     }
-    if (weight == 0) {
-      output << "<INVALID COMMAND>\n";
-      return;
-    }
     auto graph = gr.graphs_.find(graph_name);
     if (!graph) {
       output << "<INVALID COMMAND>\n";
@@ -163,10 +158,6 @@ namespace volkovich {
     std::string graph_name, from_name, to_name;
     int weight;
     if (!(input >> graph_name >> from_name >> to_name >> weight)) {
-      output << "<INVALID COMMAND>\n";
-      return;
-    }
-    if (weight == 0) {
       output << "<INVALID COMMAND>\n";
       return;
     }
