@@ -59,13 +59,32 @@ namespace volkovich {
       output << "<INVALID COMMAND>\n";
       return;
     }
-    std::vector< std::pair< std::string, int > > edges;
+    struct OutEdge {
+      std::string to;
+      std::vector< int > weights;
+    };
+    std::vector< OutEdge > edges;
     for (size_t i = 0; i < vertex->count; i++) {
-      edges.emplace_back(vertex->edges[i].to, vertex->edges[i].weight);
+      OutEdge edge;
+      edge.to = vertex->edges[i].to;
+      for (size_t j = 0; j < vertex->edges[i].weight_size; ++j) {
+        edge.weights.push_back(vertex->edges[i].weight[j]);
+      }
+      edges.push_back(std::move(edge));
     }
-    std::sort(edges.begin(), edges.end());
+    std::sort(edges.begin(), edges.end(), [](const OutEdge& lhs, const OutEdge& rhs) {
+      return lhs.to < rhs.to;
+    });
+    if (edges.empty()) {
+      output << '\n';
+      return;
+    }
     for (const auto& edge : edges) {
-      output << edge.first << ' ' << edge.second << '\n';
+      output << edge.to;
+      for (int weight : edge.weights) {
+        output << ' ' << weight;
+      }
+      output << '\n';
     }
   };
   void CommandManager::handleInbound(std::istream& input, std::ostream& output) {
@@ -79,21 +98,41 @@ namespace volkovich {
       output << "<INVALID COMMAND>\n";
       return;
     }
-    std::vector< std::pair< std::string, int > > edges;
-    for (auto it = graph->graph_.begin(); it != graph->graph_.end(); ++it) {
-      for (size_t i = 0; i < it->value.count; i++) {
-        if (it->value.edges[i].to == vertex_name) {
-          edges.emplace_back(it->key, it->value.edges[i].weight);
-        }
-      }
-    }
-    if (edges.empty()) {
+    auto vertex = graph->graph_.find(vertex_name);
+    if (!vertex) {
       output << "<INVALID COMMAND>\n";
       return;
     }
-    std::sort(edges.begin(), edges.end());
+    struct InEdge {
+      std::string from;
+      std::vector< int > weights;
+    };
+    std::vector< InEdge > edges;
+    for (auto it = graph->graph_.begin(); it != graph->graph_.end(); ++it) {
+      for (size_t i = 0; i < it->value.count; i++) {
+        if (it->value.edges[i].to == vertex_name) {
+          InEdge edge;
+          edge.from = it->key;
+          for (size_t j = 0; j < it->value.edges[i].weight_size; ++j) {
+            edge.weights.push_back(it->value.edges[i].weight[j]);
+          }
+          edges.push_back(std::move(edge));
+        }
+      }
+    }
+    std::sort(edges.begin(), edges.end(), [](const InEdge& lhs, const InEdge& rhs) {
+      return lhs.from < rhs.from;
+    });
+    if (edges.empty()) {
+      output << '\n';
+      return;
+    }
     for (const auto& edge : edges) {
-      output << edge.first << ' ' << edge.second << '\n';
+      output << edge.from;
+      for (int weight : edge.weights) {
+        output << ' ' << weight;
+      }
+      output << '\n';
     }
   };
   void CommandManager::handleBind(std::istream& input, std::ostream& output) {
@@ -127,6 +166,10 @@ namespace volkovich {
       output << "<INVALID COMMAND>\n";
       return;
     }
+    if (weight == 0) {
+      output << "<INVALID COMMAND>\n";
+      return;
+    }
     auto graph = gr.graphs_.find(graph_name);
     if (!graph) {
       output << "<INVALID COMMAND>\n";
@@ -144,7 +187,10 @@ namespace volkovich {
       output << "<INVALID COMMAND>\n";
       return;
     }
-    graph->removeEdge(from_name, to_name);
+    if (!graph->removeEdge(from_name, to_name, weight)) {
+      output << "<INVALID COMMAND>\n";
+      return;
+    }
   };
   void CommandManager::handleCreate(std::istream& input, std::ostream& output) {
     std::string graph_name;
@@ -200,9 +246,11 @@ namespace volkovich {
       output << "<INVALID COMMAND>\n";
       return;
     }
-    input >> vertex_count;
-    auto new_graph = gr.graphs_.find(new_graph_name);
-    if (new_graph) {
+    if (!(input >> vertex_count)) {
+      output << "<INVALID COMMAND>\n";
+      return;
+    }
+    if (gr.graphs_.find(new_graph_name)) {
       output << "<INVALID COMMAND>\n";
       return;
     }
@@ -211,6 +259,8 @@ namespace volkovich {
       output << "<INVALID COMMAND>\n";
       return;
     }
+    std::vector< std::string > selected_vertexes;
+    selected_vertexes.reserve(vertex_count);
     for (size_t i = 0; i < vertex_count; i++) {
       std::string vertex_name;
       if (!(input >> vertex_name)) {
@@ -221,11 +271,27 @@ namespace volkovich {
         output << "<INVALID COMMAND>\n";
         return;
       }
-      new_graph->addVertex(vertex_name);
+      selected_vertexes.push_back(vertex_name);
     }
-    // for (auto it = new_graph->graph_.begin(); it != new_graph->graph_.end(); ++it) {
-    //   auto old_
-    // }
+    auto& new_graph = gr.addGraph(new_graph_name);
+    for (const auto& vertex_name : selected_vertexes) {
+      new_graph.addVertex(vertex_name);
+    }
+    for (auto it = old_graph->graph_.begin(); it != old_graph->graph_.end(); ++it) {
+      if (std::find(selected_vertexes.begin(), selected_vertexes.end(), it->key) ==
+          selected_vertexes.end()) {
+        continue;
+      }
+      for (size_t i = 0; i < it->value.count; ++i) {
+        if (std::find(selected_vertexes.begin(), selected_vertexes.end(), it->value.edges[i].to) ==
+            selected_vertexes.end()) {
+          continue;
+        }
+        for (size_t j = 0; j < it->value.edges[i].weight_size; ++j) {
+          new_graph.addEdge(it->key, it->value.edges[i].to, it->value.edges[i].weight[j]);
+        }
+      }
+    }
   };
 
   CommandManager::CommandManager(CommandManager::GraphTable& gr) : gr(gr) {

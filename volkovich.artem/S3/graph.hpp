@@ -13,7 +13,8 @@ namespace volkovich {
   class Graph {
     struct Edge {
       Vertex to;
-      int weight;
+      int* weight = nullptr;
+      size_t weight_size = 0;
     };
 
     struct EdgeList {
@@ -26,19 +27,41 @@ namespace volkovich {
       if (src.count > 0) {
         result.edges = new Edge[src.count];
         for (size_t i = 0; i < src.count; ++i) {
-          result.edges[i] = src.edges[i];
+          result.edges[i].to = src.edges[i].to;
+          result.edges[i].weight_size = src.edges[i].weight_size;
+          if (src.edges[i].weight_size > 0) {
+            result.edges[i].weight = new int[src.edges[i].weight_size];
+            for (size_t j = 0; j < src.edges[i].weight_size; ++j) {
+              result.edges[i].weight[j] = src.edges[i].weight[j];
+            }
+          }
         }
         result.count = src.count;
       }
       return result;
     }
 
-    void appendEdge(EdgeList& list, const Edge& edge) {
+    void appendEdge(EdgeList& list, const Vertex& to, int weight) {
+      for (size_t i = 0; i < list.count; ++i) {
+        if (list.edges[i].to == to) {
+          int* new_weights = new int[list.edges[i].weight_size + 1];
+          for (size_t j = 0; j < list.edges[i].weight_size; ++j) {
+            new_weights[j] = list.edges[i].weight[j];
+          }
+          new_weights[list.edges[i].weight_size] = weight;
+          delete[] list.edges[i].weight;
+          list.edges[i].weight = new_weights;
+          ++list.edges[i].weight_size;
+          return;
+        }
+      }
       Edge* new_edges = new Edge[list.count + 1];
       for (size_t i = 0; i < list.count; ++i) {
         new_edges[i] = list.edges[i];
       }
-      new_edges[list.count] = edge;
+      int* weights = new int[1];
+      weights[0] = weight;
+      new_edges[list.count] = Edge{to, weights, 1};
       delete[] list.edges;
       list.edges = new_edges;
       ++list.count;
@@ -48,6 +71,9 @@ namespace volkovich {
       if (index >= list.count) {
         return;
       }
+      delete[] list.edges[index].weight;
+      list.edges[index].weight = nullptr;
+      list.edges[index].weight_size = 0;
       if (list.count == 1) {
         delete[] list.edges;
         list.edges = nullptr;
@@ -66,8 +92,50 @@ namespace volkovich {
       --list.count;
     }
 
+    bool removeEdgeWeight(EdgeList& list, const Vertex& to, int weight) {
+      for (size_t i = 0; i < list.count; ++i) {
+        if (list.edges[i].to != to) {
+          continue;
+        }
+        size_t remove_index = list.edges[i].weight_size;
+        for (size_t j = 0; j < list.edges[i].weight_size; ++j) {
+          if (list.edges[i].weight[j] == weight) {
+            remove_index = j;
+            break;
+          }
+        }
+        if (remove_index == list.edges[i].weight_size) {
+          return false;
+        }
+        if (list.edges[i].weight_size == 1) {
+          removeEdgeAt(list, i);
+          return true;
+        }
+        int* new_weights = new int[list.edges[i].weight_size - 1];
+        size_t pos = 0;
+        for (size_t j = 0; j < list.edges[i].weight_size; ++j) {
+          if (j != remove_index) {
+            new_weights[pos++] = list.edges[i].weight[j];
+          }
+        }
+        delete[] list.edges[i].weight;
+        list.edges[i].weight = new_weights;
+        --list.edges[i].weight_size;
+        return true;
+      }
+      return false;
+    }
+
     void freeAllEdges() {
+      if (graph_.table_size() == 0) {
+        return;
+      }
       for (auto it = graph_.begin(); it != graph_.end(); ++it) {
+        for (size_t i = 0; i < it->value.count; ++i) {
+          delete[] it->value.edges[i].weight;
+          it->value.edges[i].weight = nullptr;
+          it->value.edges[i].weight_size = 0;
+        }
         delete[] it->value.edges;
         it->value.edges = nullptr;
         it->value.count = 0;
@@ -127,20 +195,15 @@ namespace volkovich {
       if (!edges_from) {
         return;
       }
-      appendEdge(*edges_from, Edge{to, weight});
+      appendEdge(*edges_from, to, weight);
     }
 
-    void removeEdge(const Vertex& from, const Vertex& to) {
+    bool removeEdge(const Vertex& from, const Vertex& to, int weight) {
       EdgeList* edges_from = graph_.find(from);
       if (!edges_from) {
-        return;
+        return false;
       }
-      for (size_t i = 0; i < edges_from->count; ++i) {
-        if (edges_from->edges[i].to == to) {
-          removeEdgeAt(*edges_from, i);
-          return;
-        }
-      }
+      return removeEdgeWeight(*edges_from, to, weight);
     }
 
     bool hasVertex(const Vertex& v) const {
@@ -160,13 +223,26 @@ namespace volkovich {
       return nullptr;
     }
 
-    bool hasEdge(const Vertex& from, const Vertex& to, int weight) const {
-      const Edge* edge = getEdge(from, to);
-      return edge && edge->weight == weight;
-    }
+    // bool hasEdge(const Vertex& from, const Vertex& to, int weight) const {
+    //   const Edge* edge = getEdge(from, to);
+    //   return edge && edge->weight == weight;
+    // }
 
     bool hasEdge(const Vertex& from, const Vertex& to) const {
       return getEdge(from, to) != nullptr;
+    }
+
+    bool hasEdge(const Vertex& from, const Vertex& to, int weight) const {
+      const Edge* edge = getEdge(from, to);
+      if (!edge) {
+        return false;
+      }
+      for (size_t i = 0; i < edge->weight_size; ++i) {
+        if (edge->weight[i] == weight) {
+          return true;
+        }
+      }
+      return false;
     }
 
     void mergeFrom(const Graph& other) {
@@ -177,8 +253,8 @@ namespace volkovich {
       }
       for (auto it = other.graph_.begin(); it != other.graph_.end(); ++it) {
         for (size_t i = 0; i < it->value.count; ++i) {
-          if (!hasEdge(it->key, it->value.edges[i].to)) {
-            addEdge(it->key, it->value.edges[i].to, it->value.edges[i].weight);
+          for (size_t j = 0; j < it->value.edges[i].weight_size; ++j) {
+            addEdge(it->key, it->value.edges[i].to, it->value.edges[i].weight[j]);
           }
         }
       }
